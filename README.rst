@@ -41,8 +41,8 @@ Create PostgreSQL instance using ``testing.postgresql.Postgresql``::
       engine = create_engine(postgresql.url())
 
       # if you use postgresql or other drivers:
-      #   import psycopg2
-      #   db = psycopg2.connect(**postgresql.dsn())
+      #   import psycopg
+      #   db = psycopg.connect(**postgresql.dsn())
 
       #
       # do any tests using PostgreSQL...
@@ -108,7 +108,7 @@ If you want to insert fixtures to the cached database, use ``initdb_handler`` op
 
   # create initial data on create as fixtures into the database
   def handler(postgresql):
-      conn = psycopg2.connect(**postgresql.dsn())
+      conn = psycopg.connect(**postgresql.dsn())
       cursor = conn.cursor()
       cursor.execute("CREATE TABLE hello(id int, value varchar(256))")
       cursor.execute("INSERT INTO hello values(1, 'hello'), (2, 'ciao')")
@@ -123,8 +123,8 @@ If you want to insert fixtures to the cached database, use ``initdb_handler`` op
 
 Requirements
 ============
-* Python 2.7, 3.4, 3.5, 3.6
-* pg8000 1.10
+* Python >= 3.9
+* PostgreSQL 16
 
 License
 =======
@@ -147,7 +147,7 @@ History
 
 1.2.0 (2015-05-17)
 -------------------
-* Use `pg8000` for connector to create test database
+* Use `psycopg` for connector to create test database
 * Connect to `postgres` to create test database (instead of `template1`)
 
 1.1.2 (2015-04-06)
