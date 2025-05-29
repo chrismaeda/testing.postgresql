@@ -25,7 +25,7 @@ class TestPostgresql(unittest.TestCase):
             self.assertEqual('postgres', params['user'])
 
             # connect to postgresql (w/ psycopg)
-            conn = psycopg.connect(**pgsql.dsn())
+            conn = psycopg.connect(pgsql.conninfo())
             self.assertIsNotNone(conn)
             self.assertRegex(pgsql.read_bootlog(), 'is ready to accept connections')
             conn.close()
@@ -35,7 +35,7 @@ class TestPostgresql(unittest.TestCase):
             self.assertIsNotNone(engine)
 
             # connect to postgresql (w/ psycopg)
-            conn = psycopg.connect(**pgsql.dsn())
+            conn = psycopg.connect(pgsql.conninfo())
             self.assertIsNotNone(conn)
             self.assertRegex(pgsql.read_bootlog(), 'is ready to accept connections')
             conn.close()
@@ -72,16 +72,17 @@ class TestPostgresql(unittest.TestCase):
 
     def test_dsn_and_url(self):
         pgsql = testing.postgresql.Postgresql(port=12345, auto_start=0)
-        self.assertEqual({'database': 'test', 'host': '127.0.0.1', 'port': 12345, 'user': 'postgres'},
-                         pgsql.dsn())
-        self.assertEqual("postgresql://postgres@127.0.0.1:12345/test", pgsql.url())
+        pgdsn = pgsql.dsn()
+        self.assertEqual({'database': 'test', 'host': '127.0.0.1', 'port': 12345, 'user': 'postgres'}, pgdsn)
+        pgurl = pgsql.url()
+        self.assertEqual("postgresql+psycopg://postgres@127.0.0.1:12345/test", pgurl)
 
     def test_with_statement(self):
         with testing.postgresql.Postgresql() as pgsql:
             self.assertIsNotNone(pgsql)
 
             # connect to postgresql
-            conn = psycopg.connect(**pgsql.dsn())
+            conn = psycopg.connect(pgsql.conninfo())
             self.assertIsNotNone(conn)
             conn.close()
 
@@ -140,7 +141,7 @@ class TestPostgresql(unittest.TestCase):
 
             # create new database
             with testing.postgresql.Postgresql(base_dir=tmpdir) as pgsql:
-                conn = psycopg.connect(**pgsql.dsn())
+                conn = psycopg.connect(pgsql.conninfo())
                 with closing(conn.cursor()) as cursor:
                     cursor.execute("CREATE TABLE hello(id int, value varchar(256))")
                     cursor.execute("INSERT INTO hello values(1, 'hello'), (2, 'ciao')")
@@ -150,10 +151,10 @@ class TestPostgresql(unittest.TestCase):
             # create another database from first one
             data_dir = os.path.join(tmpdir, 'data')
             with testing.postgresql.Postgresql(copy_data_from=data_dir) as pgsql:
-                conn = psycopg.connect(**pgsql.dsn())
+                conn = psycopg.connect(pgsql.conninfo())
                 with closing(conn.cursor()) as cursor:
                     cursor.execute('SELECT * FROM hello ORDER BY id')
-                    self.assertEqual(cursor.fetchall(), ([1, 'hello'], [2, 'ciao']))
+                    self.assertEqual(cursor.fetchall(), [(1, 'hello'), (2, 'ciao')])
                 conn.close()
         finally:
             rmtree(tmpdir)
@@ -245,7 +246,7 @@ class TestPostgresql(unittest.TestCase):
 
     def test_PostgresqlFactory_with_initialized_handler(self):
         def handler(pgsql):
-            conn = psycopg.connect(**pgsql.dsn())
+            conn = psycopg.connect(pgsql.conninfo())
             with closing(conn.cursor()) as cursor:
                 cursor.execute("CREATE TABLE hello(id int, value varchar(256))")
                 cursor.execute("INSERT INTO hello values(1, 'hello'), (2, 'ciao')")
@@ -256,10 +257,10 @@ class TestPostgresql(unittest.TestCase):
                                                           on_initialized=handler)
         try:
             with Postgresql() as pgsql:
-                conn = psycopg.connect(**pgsql.dsn())
+                conn = psycopg.connect(pgsql.conninfo())
                 with closing(conn.cursor()) as cursor:
                     cursor.execute('SELECT * FROM hello ORDER BY id')
-                    self.assertEqual(cursor.fetchall(), ([1, 'hello'], [2, 'ciao']))
+                    self.assertEqual(cursor.fetchall(), [(1, 'hello'), (2, 'ciao')])
                 conn.close()
         finally:
             Postgresql.clear_cache()

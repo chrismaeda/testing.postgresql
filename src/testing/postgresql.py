@@ -54,6 +54,19 @@ class Postgresql(Database):
         if self.postgres is None:
             self.postgres = find_program('postgres', ['bin'])
 
+    def conninfo(self, **kwargs):
+        params = dict(kwargs)
+        # change database to dbname
+        if 'database' in params:
+            database = params.pop('database')
+            params['dbname'] = database
+        params.setdefault('port', self.settings['port'])
+        params.setdefault('host', '127.0.0.1')
+        params.setdefault('user', 'postgres')
+        params.setdefault('dbname', 'test')
+        conninfo = psycopg.conninfo.make_conninfo(**params)
+        return conninfo       
+    
     def dsn(self, **kwargs):
         # "database=test host=localhost user=postgres"
         params = dict(kwargs)
@@ -67,7 +80,7 @@ class Postgresql(Database):
     def url(self, **kwargs):
         params = self.dsn(**kwargs)
 
-        url = ('postgresql://%s@%s:%d/%s' %
+        url = ('postgresql+psycopg://%s@%s:%d/%s' %
                (params['user'], params['host'], params['port'], params['database']))
 
         return url
@@ -96,7 +109,7 @@ class Postgresql(Database):
                 self.settings['postgres_args'].split())
 
     def poststart(self):
-        with closing(psycopg.connect(**self.dsn(database='postgres'))) as conn:
+        with closing(psycopg.connect(self.conninfo(database='postgres'))) as conn:
             conn.autocommit = True
             with closing(conn.cursor()) as cursor:
                 cursor.execute("SELECT COUNT(*) FROM pg_database WHERE datname='test'")
@@ -105,9 +118,10 @@ class Postgresql(Database):
 
     def is_server_available(self):
         try:
-            with closing(psycopg.connect(**self.dsn(database='template1'))):
+            with closing(psycopg.connect(self.conninfo(database='template1'))):
                 pass
-        except psycopg.Error:
+        except psycopg.Error as e:
+            print(e)
             return False
         else:
             return True

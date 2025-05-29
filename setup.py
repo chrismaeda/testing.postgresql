@@ -8,10 +8,6 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
     # Drop Python 2 support
-    "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.3",
-    "Programming Language :: Python :: 3.4",
-    "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -22,14 +18,13 @@ classifiers = [
 ]
 
 install_requires = [
-    'testing.common.database >= 1.1.0',
     'psycopg>=3',
 ]
 
 
 setup(
     name='testing.postgresql',
-    version='1.3.0',
+    version='1.4.0',
     description='automatically setups a postgresql instance in a temporary '
                 'directory, and destroys it after testing',
     long_description=open('README.rst').read(),
@@ -47,7 +42,7 @@ setup(
     extras_require=dict(
         testing=[
             'pytest',
-            'psycopg2',
+            'psycopg',
             'SQLAlchemy',
         ],
     ),
