@@ -14,7 +14,7 @@
 #  limitations under the License.
 
 import os
-import pg8000
+import psycopg
 import signal
 import subprocess
 from glob import glob
@@ -96,7 +96,7 @@ class Postgresql(Database):
                 self.settings['postgres_args'].split())
 
     def poststart(self):
-        with closing(pg8000.connect(**self.dsn(database='postgres'))) as conn:
+        with closing(psycopg.connect(**self.dsn(database='postgres'))) as conn:
             conn.autocommit = True
             with closing(conn.cursor()) as cursor:
                 cursor.execute("SELECT COUNT(*) FROM pg_database WHERE datname='test'")
@@ -105,9 +105,9 @@ class Postgresql(Database):
 
     def is_server_available(self):
         try:
-            with closing(pg8000.connect(**self.dsn(database='template1'))):
+            with closing(psycopg.connect(**self.dsn(database='template1'))):
                 pass
-        except pg8000.Error:
+        except psycopg.Error:
             return False
         else:
             return True
