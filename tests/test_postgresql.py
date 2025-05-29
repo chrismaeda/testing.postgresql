@@ -7,8 +7,7 @@ import unittest
 import testing.postgresql
 from time import sleep
 from shutil import rmtree
-import pg8000
-import psycopg2
+import psycopg
 import sqlalchemy
 from contextlib import closing
 
@@ -25,20 +24,20 @@ class TestPostgresql(unittest.TestCase):
             self.assertEqual(pgsql.settings['port'], params['port'])
             self.assertEqual('postgres', params['user'])
 
-            # connect to postgresql (w/ psycopg2)
-            conn = psycopg2.connect(**pgsql.dsn())
+            # connect to postgresql (w/ psycopg)
+            conn = psycopg.connect(**pgsql.dsn())
             self.assertIsNotNone(conn)
-            self.assertRegexpMatches(pgsql.read_bootlog(), 'is ready to accept connections')
+            self.assertRegex(pgsql.read_bootlog(), 'is ready to accept connections')
             conn.close()
 
             # connect to postgresql (w/ sqlalchemy)
             engine = sqlalchemy.create_engine(pgsql.url())
             self.assertIsNotNone(engine)
 
-            # connect to postgresql (w/ pg8000)
-            conn = pg8000.connect(**pgsql.dsn())
+            # connect to postgresql (w/ psycopg)
+            conn = psycopg.connect(**pgsql.dsn())
             self.assertIsNotNone(conn)
-            self.assertRegexpMatches(pgsql.read_bootlog(), 'is ready to accept connections')
+            self.assertRegex(pgsql.read_bootlog(), 'is ready to accept connections')
             conn.close()
         finally:
             # shutting down
@@ -82,7 +81,7 @@ class TestPostgresql(unittest.TestCase):
             self.assertIsNotNone(pgsql)
 
             # connect to postgresql
-            conn = pg8000.connect(**pgsql.dsn())
+            conn = psycopg.connect(**pgsql.dsn())
             self.assertIsNotNone(conn)
             conn.close()
 
@@ -141,7 +140,7 @@ class TestPostgresql(unittest.TestCase):
 
             # create new database
             with testing.postgresql.Postgresql(base_dir=tmpdir) as pgsql:
-                conn = pg8000.connect(**pgsql.dsn())
+                conn = psycopg.connect(**pgsql.dsn())
                 with closing(conn.cursor()) as cursor:
                     cursor.execute("CREATE TABLE hello(id int, value varchar(256))")
                     cursor.execute("INSERT INTO hello values(1, 'hello'), (2, 'ciao')")
@@ -151,7 +150,7 @@ class TestPostgresql(unittest.TestCase):
             # create another database from first one
             data_dir = os.path.join(tmpdir, 'data')
             with testing.postgresql.Postgresql(copy_data_from=data_dir) as pgsql:
-                conn = pg8000.connect(**pgsql.dsn())
+                conn = psycopg.connect(**pgsql.dsn())
                 with closing(conn.cursor()) as cursor:
                     cursor.execute('SELECT * FROM hello ORDER BY id')
                     self.assertEqual(cursor.fetchall(), ([1, 'hello'], [2, 'ciao']))
@@ -246,7 +245,7 @@ class TestPostgresql(unittest.TestCase):
 
     def test_PostgresqlFactory_with_initialized_handler(self):
         def handler(pgsql):
-            conn = pg8000.connect(**pgsql.dsn())
+            conn = psycopg.connect(**pgsql.dsn())
             with closing(conn.cursor()) as cursor:
                 cursor.execute("CREATE TABLE hello(id int, value varchar(256))")
                 cursor.execute("INSERT INTO hello values(1, 'hello'), (2, 'ciao')")
@@ -257,7 +256,7 @@ class TestPostgresql(unittest.TestCase):
                                                           on_initialized=handler)
         try:
             with Postgresql() as pgsql:
-                conn = pg8000.connect(**pgsql.dsn())
+                conn = psycopg.connect(**pgsql.dsn())
                 with closing(conn.cursor()) as cursor:
                     cursor.execute('SELECT * FROM hello ORDER BY id')
                     self.assertEqual(cursor.fetchall(), ([1, 'hello'], [2, 'ciao']))
