@@ -7,7 +7,7 @@ python -m pip install --upgrade pip
 
 # Install runtime and test dependencies
 pip install \
-  nose \
+  pytest \
   pg8000 \
   psycopg2-binary \
   SQLAlchemy \

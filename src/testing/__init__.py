@@ -13,4 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-__import__('pkg_resources').declare_namespace(__name__)
+try:
+    __import__('pkg_resources').declare_namespace(__name__)
+except ImportError:  # pragma: no cover - fallback when pkg_resources is missing
+    from pkgutil import extend_path
+    __path__ = extend_path(__path__, __name__)

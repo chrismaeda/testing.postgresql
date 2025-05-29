@@ -46,11 +46,11 @@ setup(
     install_requires=install_requires,
     extras_require=dict(
         testing=[
-            'nose',
+            'pytest',
             'psycopg2',
             'SQLAlchemy',
         ],
     ),
-    test_suite='nose.collector',
+    test_suite='pytest',
     namespace_packages=['testing'],
 )
